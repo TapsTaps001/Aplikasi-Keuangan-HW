@@ -9,7 +9,7 @@ services:
       - DB_HOST=postgres_db
     ports:
       # Gunakan 3002 karena 3001 sudah terpakai oleh bot
-      - "3002:3000"
+      - "3003:3000"
     networks:
       - jaringan_keuangan_shared
 
