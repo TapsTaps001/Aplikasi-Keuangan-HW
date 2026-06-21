@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    tipe VARCHAR(10) NOT NULL,
+    nominal NUMERIC NOT NULL,
+    keterangan TEXT NOT NULL,
+    waktu_input TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keuangan-HW</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css"
+    />
+    <style>
+      /* CSS Kustom untuk Tombol Hapus */
+      .btn-hapus-kustom {
+        background-color: #dc3545; /* Merah tegas */
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px; /* Ukuran yang pas untuk ditekan jari di HP */
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-hapus-kustom:hover {
+        background-color: #b02a37;
+      }
+
+      body {
+        background-color: #f8f9fa;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .card-stat {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s;
+      }
+      .card-stat:hover {
+        transform: translateY(-5px);
+      }
+      .table-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-dark bg-dark mb-4">
+      <div class="container">
+        <span class="navbar-brand mb-0 h1"
+          ><i class="fas fa-wallet me-2"></i>Pencatatan Keuangan HW</span
+        >
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card card-stat bg-success text-white shadow">
+            <div class="card-body">
+              <h6 class="text-uppercase opacity-75">Total Pemasukan</h6>
+              <h2 id="totalPemasukan">Rp 0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card card-stat bg-danger text-white shadow">
+            <div class="card-body">
+              <h6 class="text-uppercase opacity-75">Total Pengeluaran</h6>
+              <h2 id="totalPengeluaran">Rp 0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card card-stat bg-primary text-white shadow">
+            <div class="card-body">
+              <h6 class="text-uppercase opacity-75">Saldo Bersih</h6>
+              <h2 id="totalSaldo">Rp 0</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <div class="table-container text-center h-100">
+            <h5 class="mb-4">Perbandingan Saldo</h5>
+            <canvas id="financeChart"></canvas>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          <div class="table-container shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Riwayat Transaksi Terakhir</h5>
+              <button
+                onclick="loadData()"
+                class="btn btn-sm btn-outline-secondary"
+              >
+                <i class="fas fa-sync"></i> Refresh
+              </button>
+              <button
+                class="btn btn-sm btn-primary ms-2"
+                data-bs-toggle="modal"
+                data-bs-target="#modalTambah"
+              >
+                <i class="fas fa-plus me-1"></i> Tambah
+              </button>
+              <button onclick="exportExcel()" class="btn btn-sm btn-success">
+                <i class="fas fa-file-excel me-1"></i> Ekspor Excel
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Keterangan</th>
+                    <th class="text-end">Nominal</th>
+                    <th class="text-center" style="width: 80px">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="modalTambah"
+      tabindex="-1"
+      aria-labelledby="modalTambahLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTambahLabel">
+              Tambah Transaksi Baru
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formTransaksi">
+              <div class="mb-3">
+                <label class="form-label">Tipe Transaksi</label>
+                <select class="form-select" id="inputTipe" required>
+                  <option value="masuk">Masuk (Pemasukan)</option>
+                  <option value="keluar">Keluar (Pengeluaran)</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Keterangan</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="inputKeterangan"
+                  placeholder="Contoh: Gaji bulanan"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nominal (Rp)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="inputNominal"
+                  placeholder="Contoh: 500000"
+                  min="1"
+                  required
+                />
+              </div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                  Simpan Transaksi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const API_URL = "/api/transactions";
+      let myChart;
+
+      const formatRp = (angka) => {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+        }).format(angka);
+      };
+
+      async function loadData() {
+        try {
+          const response = await fetch(API_URL);
+          const result = await response.json();
+
+          if (result.status === "success") {
+            updateSummary(result.summary);
+            updateTable(result.data);
+            updateChart(result.summary);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          alert("Gagal mengambil data dari server. Pastikan backend menyala.");
+        }
+      }
+
+      function updateSummary(summary) {
+        const masuk = parseFloat(summary.total_masuk);
+        const keluar = parseFloat(summary.total_keluar);
+        const saldo = masuk - keluar;
+
+        document.getElementById("totalPemasukan").innerText = formatRp(masuk);
+        document.getElementById("totalPengeluaran").innerText =
+          formatRp(keluar);
+        document.getElementById("totalSaldo").innerText = formatRp(saldo);
+      }
+
+      function updateChart(summary) {
+        const ctx = document.getElementById("financeChart").getContext("2d");
+        const data = [summary.total_masuk, summary.total_keluar];
+
+        if (myChart) {
+          myChart.destroy();
+        }
+
+        myChart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: ["Masuk", "Keluar"],
+            datasets: [
+              {
+                data: data,
+                backgroundColor: ["#198754", "#dc3545"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+      }
+
+      // fungsi hapus history
+      function updateTable(data) {
+        const tbody = document.getElementById("transactionBody");
+        tbody.innerHTML = "";
+
+        data.forEach((item) => {
+          const row = `
+    <tr>
+        <td><small class="text-muted">${new Date(item.waktu_input).toLocaleString("id-ID")}</small></td>
+        <td>
+            <i class="fas ${item.tipe === "masuk" ? "fa-arrow-down text-success" : "fa-arrow-up text-danger"} me-2"></i>
+            ${item.keterangan}
+        </td>
+        <td class="text-end fw-bold ${item.tipe === "masuk" ? "text-success" : "text-danger"}">
+            ${item.tipe === "masuk" ? "+" : "-"} ${formatRp(item.nominal)}
+        </td>
+        <td class="text-center">
+            <button onclick="deleteTransaction(${item.id})" class="btn-hapus-kustom" title="Hapus Transaksi">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </td>
+    </tr>
+    `;
+          tbody.innerHTML += row;
+        });
+      }
+
+      async function deleteTransaction(id) {
+        // Lapis keamanan konfirmasi tindakan user
+        if (
+          !confirm("Apakah Anda yakin ingin menghapus riwayat transaksi ini?")
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE",
+          });
+          const result = await response.json();
+
+          if (result.status === "success") {
+            // Muat ulang data untuk memperbarui tabel, summary kartu, dan chart otomatis
+            loadData();
+          } else {
+            alert("Gagal menghapus: " + result.message);
+          }
+        } catch (error) {
+          console.error("Error deleting data:", error);
+          alert("Terjadi kesalahan jaringan saat mencoba menghapus data.");
+        }
+      }
+
+      // Load data pertama kali
+      loadData();
+      // Refresh otomatis setiap 30 detik
+      setInterval(loadData, 30000);
+
+      function exportExcel() {
+        // Mengarahkan browser langsung ke endpoint API
+        // Gunakan relative path agar otomatis mengikuti IP server
+        window.location.href = "/api/export-excel";
+      }
+      document
+        .getElementById("formTransaksi")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const data = {
+            tipe: document.getElementById("inputTipe").value,
+            keterangan: document.getElementById("inputKeterangan").value,
+            nominal: document.getElementById("inputNominal").value,
+          };
+
+          try {
+            const response = await fetch(API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            if (result.status === "success") {
+              // Tutup modal secara otomatis
+              const modal = bootstrap.Modal.getInstance(
+                document.getElementById("modalTambah"),
+              );
+              modal.hide();
+
+              // Reset form dan muat ulang data tabel
+              document.getElementById("formTransaksi").reset();
+              loadData();
+            } else {
+              alert("Gagal: " + result.message);
+            }
+          } catch (error) {
+            alert("Terjadi kesalahan jaringan.");
+          }
+        });
+    </script>
+  </body>
+</html>

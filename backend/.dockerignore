@@ -1,0 +1,15 @@
+# Abaikan folder dependency lokal
+node_modules/
+
+# Abaikan log npm
+npm-debug.log
+npm-debug.log.*
+
+# KEAMANAN: Jangan salin file .env ke dalam image!
+# Variabel environment harus dipassing melalui docker-compose.yml
+.env
+
+# Abaikan file Git & Docker itu sendiri
+.git/
+Dockerfile
+.dockerignore

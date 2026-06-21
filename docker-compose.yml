@@ -1,0 +1,20 @@
+services:
+  backend-web-api:
+    build: ./backend
+    container_name: finance_web_api
+    restart: always
+    env_file: .env
+    environment:
+      # Arahkan langsung ke nama container database yang sudah aktif
+      - DB_HOST=postgres_db
+    ports:
+      # Gunakan 3002 karena 3001 sudah terpakai oleh bot
+      - "3002:3000"
+    networks:
+      - jaringan_keuangan_shared
+
+networks:
+  jaringan_keuangan_shared:
+    external: true
+    # Menggunakan nama network dari output server Anda
+    name: aplikasi-pencatatan-keuangan_finance-network
